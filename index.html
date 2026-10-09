@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arabic.IImgage</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#e8f1f2;--sea:#bcd9de;--ink:#12303a;--card:#fff;--line:#9bbcc4;--acc:#0e6b7a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1d24;--sea:#123642;--ink:#e3f0f2;--card:#16303a;--line:#2d5563;--acc:#5fc3d3}}
+:root[data-theme="dark"]{--bg:#0c1d24;--sea:#123642;--ink:#e3f0f2;--card:#16303a;--line:#2d5563;--acc:#5fc3d3}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Georgia,"Times New Roman",serif}
+main{max-width:520px;margin:0 auto;padding:14px;position:relative}
+h1{margin:0 0 4px;font-size:26px}h2{font-size:19px;margin:14px 0 4px}
+#msg{min-height:48px;margin:6px 0;padding:8px 10px;background:var(--card);border-left:6px solid var(--acc);border-radius:4px;font-size:15px}
+#board{width:100%;background:var(--sea);border-radius:10px;display:block}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center}
+button,select,input{font:inherit;padding:9px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
+button{cursor:pointer}button:disabled{opacity:.5;cursor:default}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#res{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center}
+#res div{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 2px;font-size:14px}
+#res b{display:block;font-size:20px}
+.cost{font-size:13px;opacity:.85;margin:4px 0}
+#sc{display:flex;gap:6px;flex-wrap:wrap}
+#sc span{padding:4px 8px;border-radius:14px;background:var(--card);border:2px solid var(--line);font-size:14px}
+label{display:block;margin:8px 0}label input{width:100%;margin-top:3px}
+#lc{font-family:monospace;letter-spacing:2px;background:var(--card);padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
+#dice{position:absolute;top:12px;right:14px;display:flex;gap:6px;align-items:center;font-weight:700}
+#dice[hidden],#tr[hidden]{display:none}
+#dice i{font-style:normal;width:38px;height:38px;display:grid;place-items:center;background:#fff;color:#12303a;border:2px solid #12303a;border-radius:8px;font-size:22px}
+#dice b{font-size:22px;min-width:34px}
+#dice.roll i{animation:sh .15s infinite alternate}
+@keyframes sh{to{transform:rotate(12deg)}}
+@media (prefers-reduced-motion:reduce){#dice.roll i{animation:none}}
+.v{fill:transparent;cursor:pointer}.e{stroke:transparent;stroke-width:12;cursor:pointer}.hx{fill:rgba(255,255,255,.25);cursor:pointer}
+</style></head><body><main>
+<h1>Arabic.IImgage</h1>
+<section id="start">
+<h2>Play on one screen</h2>
+<label>How many players?<select id="cnt"><option>2</option><option>3</option><option selected>4</option></select></label>
+<div id="names"></div>
+<p class="cost">Everyone shares this screen. Pass the device when the turn changes.</p>
+<button id="go">Start game</button>
+<h2>Play online</h2>
+<div id="onl"><label>Your name<input id="nm" maxlength="14" placeholder="Your name"></label>
+<div class="row"><button id="mk">Create lobby</button></div>
+<div class="row"><input id="jc" placeholder="Join code" maxlength="8" style="width:150px" aria-label="Join code"><button id="jn">Join lobby</button></div>
+<p class="cost" id="oe"></p></div>
+</section>
+<section id="lobby" hidden>
+<h2>Lobby <span id="lc"></span></h2>
+<p class="cost">Friends open this same page, tap Join lobby, and type the code. Up to 4 players. Colors go in join order: blue, red, white, green.</p>
+<ul id="lp"></ul>
+<div class="row"><button id="ls">Start game</button><button id="ll">Leave</button></div>
+<p class="cost" id="le"></p>
+</section>
+<section id="game" hidden>
+<div id="dice" hidden aria-live="polite"></div>
+<div id="sc"></div>
+<div id="msg"></div>
+<svg id="board" viewBox="0 0 460 430" role="img" aria-label="Island board"></svg>
+<div class="cost" id="who"></div>
+<div id="res"></div>
+<div class="row"><button id="roll">Roll dice</button><button data-m="road">Road</button><button data-m="town">Town</button><button data-m="city">City</button><button id="end">End turn</button></div>
+<div class="row"><select id="g" aria-label="Give"></select><span>for</span><select id="t" aria-label="Get"></select><button id="bank">Bank 4:1</button></div>
+<div id="trrow" hidden><div class="row"><select id="tp" aria-label="Trade with"></select><select id="gq" aria-label="Give amount"></select><select id="gk" aria-label="Give card"></select><span>for</span><select id="rq" aria-label="Get amount"></select><select id="rk" aria-label="Get card"></select><button id="offer">Offer trade</button></div>
+<div class="row" id="tr" hidden><span id="trt"></span><button id="acc">Accept</button><button id="dec">No</button></div></div>
+<div class="cost">Road: wood + brick. Town: wood, brick, sheep, wheat. City: 2 wheat + 3 ore. Town = 1 point, city = 2. First to 10 points wins. On a 7, anyone with more than 7 cards loses half, then the roller moves the robber and steals a card.</div>
+<div class="row"><button id="isl">New island</button><button id="new">New game</button></div>
+</section>
+</main>
+<script>
+const S=44,R3=Math.sqrt(3),N={wood:"Wood",brick:"Brick",sheep:"Sheep",grain:"Wheat",ore:"Ore"},K=Object.keys(N);
+const COL={wood:"#2f7d4a",brick:"#b5513a",sheep:"#8fc75a",grain:"#e6c34a",ore:"#8a8f9c",desert:"#d9c79a"};
+const CL=[{n:"Blue",c:"#3b6fe0"},{n:"Red",c:"#e5484d"},{n:"White",c:"#ffffff"},{n:"Green",c:"#2fa84f"}];
+const RD={wood:1,brick:1},TW={wood:1,brick:1,sheep:1,grain:1},CT={grain:2,ore:3};
+let D=[1,1],rolling=false,tr=null,ON=false,HOST=false,R=null,room=null,me=-1,ak=0,ver=0,lastV=-1,seen={},started=false,lm="",code="";
+let P,B,Rd,rb,sq,si,sp,lt,cur,setup,rolled,won,pend,mode,H=[],V={},E={};
+const $=i=>document.getElementById(i),rnd=a=>a[Math.random()*a.length|0],r6=()=>1+Math.random()*6|0;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";"),zero=()=>({wood:0,brick:0,sheep:0,grain:0,ore:0});
+const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const key=p=>Math.round(p[0])+","+Math.round(p[1]),ek=(a,b)=>a<b?a+"|"+b:b+"|"+a;
+(()=>{for(let q=-2;q<=2;q++)for(let r=-2;r<=2;r++){if(Math.abs(q+r)>2)continue;
+ const cx=230+S*R3*(q+r/2),cy=215+S*1.5*r,h={cx,cy,t:"desert",n:null,c:[],d:q===-1&&r===1};
+ for(let j=0;j<6;j++){const a=(60*j-30)*Math.PI/180,p=[cx+S*Math.cos(a),cy+S*Math.sin(a)],kk=key(p);
+  V[kk]=V[kk]||{x:p[0],y:p[1],nb:new Set()};h.c.push(kk)}
+ for(let j=0;j<6;j++){const a=h.c[j],b=h.c[(j+1)%6];V[a].nb.add(b);V[b].nb.add(a);E[ek(a,b)]=[a,b]}
+ H.push(h)}})();
+const VK=Object.keys(V),EK=Object.keys(E),vi={},ei={};VK.forEach((k,i)=>vi[k]=i);EK.forEach((k,i)=>ei[k]=i);
+const tot=p=>K.reduce((s,k)=>s+p.r[k],0);
+const vp=i=>Object.values(B).filter(b=>b.o===i).reduce((s,b)=>s+b.l,0);
+const say=m=>{lm=m;$("msg").textContent=m;$("msg").style.borderLeftColor=P[cur].c};
+const free=v=>!B[v]&&![...V[v].nb].some(n=>B[n]);
+const conn=(o,v)=>[...V[v].nb].some(n=>Rd[ek(v,n)]===o);
+const canRoad=(o,e)=>{if(Rd[e]!==undefined)return false;const[a,b]=E[e];return [a,b].some(v=>(B[v]&&B[v].o===o)||conn(o,v))};
+const afford=(p,c)=>Object.keys(c).every(k=>p.r[k]>=c[k]);
+const pay=(p,c)=>{for(const k in c)p.r[k]-=c[k]};
+const show=x=>["start","lobby","game"].forEach(i=>$(i).hidden=i!==x);
+const mk=()=>{const c=+$("cnt").value;$("names").innerHTML=CL.slice(0,c).map((x,i)=>`<label>Player ${i+1} name (${x.n})<input maxlength="14" placeholder="${x.n}"></label>`).join("")};
+$("cnt").onchange=mk;mk();
+$("go").onclick=()=>{const c=+$("cnt").value,ins=[...$("names").querySelectorAll("input")];ON=false;HOST=false;started=true;
+ P=sh(CL.slice(0,c).map((x,i)=>({n:ins[i].value.trim()||x.n,c:x.c,p:"",r:zero()})));show("game");initGame()};
+function initGame(){
+ const t=sh(["wood","wood","wood","wood","brick","brick","brick","sheep","sheep","sheep","sheep","grain","grain","grain","grain","ore","ore","ore"]);
+ const n=sh([2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12]);let a=0,b=0;
+ H.forEach(h=>{if(h.d){h.t="desert";h.n=null}else{h.t=t[a++];h.n=n[b++]}});
+ tr=null;B={};Rd={};rb=H.findIndex(h=>h.d);setup=true;rolled=false;won=null;pend=false;mode=null;
+ sq=[...Array(P.length).keys()];sq=sq.concat([...sq].reverse());si=0;sp="town";cur=sq[0];lt=null;
+ if(ON)me=P.findIndex(p=>p.p===myPeer());
+ say(P[cur].n+" goes first. Pick a corner for your first town.");draw()}
+const myPeer=()=>{const x=R&&R.peers().find(p=>p.sameTab);return x?x.peer:""};
+function snap(){return{p:P.map(p=>[p.n,p.c,p.p,...K.map(k=>p.r[k])]),t:H.map(h=>h.t==="desert"?5:K.indexOf(h.t)).join(""),n:H.map(h=>h.n||0),
+ b:Object.entries(B).map(([k,x])=>[vi[k],x.o,x.l]),r:Object.entries(Rd).map(([k,o])=>[ei[k],o]),rb,su:+setup,sp,lt:lt==null?-1:vi[lt],si,cur,ro:+rolled,w:won,pe:+pend,tr,D,m:lm,v:++ver}}
+function load(s){const pc=cur;
+ P=s.p.map(a=>({n:a[0],c:a[1],p:a[2],r:{wood:a[3],brick:a[4],sheep:a[5],grain:a[6],ore:a[7]}}));
+ H.forEach((h,i)=>{const c=+s.t[i];h.t=c===5?"desert":K[c];h.n=s.n[i]||null});
+ B={};s.b.forEach(([i,o,l])=>B[VK[i]]={o,l});Rd={};s.r.forEach(([i,o])=>Rd[EK[i]]=o);
+ rb=s.rb;setup=!!s.su;sp=s.sp;lt=s.lt<0?null:VK[s.lt];si=s.si;cur=s.cur;rolled=!!s.ro;won=s.w;pend=!!s.pe;tr=s.tr;D=s.D;
+ if(cur!==pc)mode=null;me=P.findIndex(p=>p.p===myPeer());started=true;show("game");say(s.m);draw()}
+function steal(i,hi){
+ const os=[...new Set(H[hi].c.map(v=>B[v]).filter(b=>b&&b.o!==i&&tot(P[b.o])>0).map(b=>b.o))];
+ if(!os.length)return P[i].n+" moved the robber. No one to rob.";
+ const o=rnd(os),k=rnd(K.filter(k=>P[o].r[k]>0));P[o].r[k]--;P[i].r[k]++;
+ return P[i].n+" moved the robber and took 1 "+N[k].toLowerCase()+" from "+P[o].n+"."}
+function rollIt(){
+ const s=D[0]+D[1],w=P[cur].n+" rolled "+s+". ";
+ if(s===7){const d=[];P.forEach(p=>{let t=tot(p);if(t>7){let c=t>>1;d.push(p.n+" lost "+c);while(c--)p.r[rnd(K.filter(k=>p.r[k]>0))]--}});
+  pend=true;return w+(d.length?d.join(", ")+". ":"")+"Tap a hex to move the robber."}
+ const got={};
+ H.forEach((h,x)=>{if(h.n===s&&x!==rb)h.c.forEach(v=>{const b=B[v];if(b){P[b.o].r[h.t]+=b.l;(got[b.o]=got[b.o]||[]).push(b.l+" "+N[h.t].toLowerCase())}})});
+ const g=Object.keys(got).map(o=>P[o].n+" got "+got[o].join(", ")).join(". ");
+ return w+(g?g+".":"No one got cards.")}
+function check(){if(vp(cur)>=10){won=cur;say(P[cur].n+" wins with "+vp(cur)+" points! Tap New game to play again.");return true}return false}
+function click(type,id){
+ if(won!==null||tr)return;
+ if(setup){
+  if(sp==="town"&&type==="v"){if(!free(id)){say("Too close to another town. Pick another corner.");return}
+   B[id]={o:cur,l:1};lt=id;sp="road";
+   if(si>=P.length)H.forEach(h=>{if(h.c.includes(id)&&h.t!=="desert")P[cur].r[h.t]++});
+   say(P[cur].n+", now pick a road next to your new town.")}
+  else if(sp==="road"&&type==="e"){if(!E[id].includes(lt)||Rd[id]!==undefined){say("The road must touch the town you just placed.");return}
+   Rd[id]=cur;si++;sp="town";
+   if(si>=sq.length){setup=false;cur=0;say("Setup done. "+P[cur].n+", roll the dice.")}
+   else{cur=sq[si];say(P[cur].n+", pick a corner for your "+(si>=P.length?"second":"first")+" town.")}}
+  return draw()}
+ if(type==="h"){if(!pend)return;if(+id===rb){say("Pick a different hex.");return}rb=+id;pend=false;say(steal(cur,rb));return draw()}
+ if(!mode)return;
+ if(!rolled){say("Roll the dice first.");return}if(pend){say("Move the robber first.");return}
+ const me_=P[cur],need=c=>afford(me_,c)||(say("Not enough cards."),false);
+ if(mode==="road"&&type==="e"){if(!canRoad(cur,id)){say("A road must touch your town or road.");return}if(!need(RD))return;pay(me_,RD);Rd[id]=cur;say("Road built.")}
+ else if(mode==="town"&&type==="v"){if(!free(id)||!conn(cur,id)){say("A town needs a free corner next to your road.");return}if(!need(TW))return;pay(me_,TW);B[id]={o:cur,l:1};say("Town built.")}
+ else if(mode==="city"&&type==="v"){if(!B[id]||B[id].o!==cur||B[id].l!==1){say("Tap one of your towns.");return}if(!need(CT))return;pay(me_,CT);B[id].l=2;say("City built.")}
+ else return;
+ check();draw()}
+function doRoll(){if(setup){say("Finish setup first. Each player places a town and a road.");return}if(rolled){say("You already rolled. Build, trade, or end your turn.");return}
+ rolled=true;D=[r6(),r6()];say(rollIt());draw()}
+function doEnd(){if(setup)return;if(tr){say("Answer the trade first.");return}if(pend){say("Move the robber first.");return}if(!rolled){say("Roll the dice first.");return}
+ cur=(cur+1)%P.length;rolled=false;mode=null;say(P[cur].n+", it is your turn. Roll the dice.");draw()}
+function doBank(a){if(setup)return;const p=P[cur];
+ if(a.g===a.r){say("Pick two different cards.");return}if(p.r[a.g]<4){say("You need 4 "+N[a.g].toLowerCase()+" to trade with the bank.");return}
+ p.r[a.g]-=4;p.r[a.r]++;say("Traded 4 "+N[a.g].toLowerCase()+" for 1 "+N[a.r].toLowerCase()+" with the bank.");draw()}
+function doOffer(a){if(setup||tr||!ON)return;if(!rolled){say("Roll the dice first.");return}if(pend){say("Move the robber first.");return}
+ const o=+a.o;if(!P[o]||o===cur)return;
+ if(a.gk===a.rk){say("Pick two different cards.");return}
+ if(P[cur].r[a.gk]<a.gq){say("You do not have enough "+N[a.gk].toLowerCase()+".");return}
+ if(P[o].r[a.rk]<a.rq){say(P[o].n+" does not have enough "+N[a.rk].toLowerCase()+".");return}
+ tr={f:cur,o,gk:a.gk,rk:a.rk,gq:a.gq,rq:a.rq};say(P[o].n+", "+P[cur].n+" offers "+a.gq+" "+N[a.gk].toLowerCase()+" for "+a.rq+" "+N[a.rk].toLowerCase()+". Tap Accept or No.");draw()}
+function run(a,w){
+ if(a.t==="acc"||a.t==="dec"){if(!tr||tr.o!==w)return;const x=tr;tr=null;
+  if(a.t==="dec")say(P[w].n+" said no.");
+  else if(P[x.f].r[x.gk]<x.gq||P[w].r[x.rk]<x.rq)say("The trade failed. Not enough cards.");
+  else{P[x.f].r[x.gk]-=x.gq;P[w].r[x.gk]+=x.gq;P[w].r[x.rk]-=x.rq;P[x.f].r[x.rk]+=x.rq;say(P[w].n+" said yes. Trade done.")}
+  return draw()}
+ if(w!==cur||won!==null)return;
+ const rem=ON&&w!==me,sm=mode;if(rem&&a.m!==undefined)mode=a.m;
+ if(a.t==="roll")doRoll();else if(a.t==="end")doEnd();else if(a.t==="click")click(a.y,a.i);else if(a.t==="bank")doBank(a);else if(a.t==="offer")doOffer(a);
+ if(rem)mode=sm}
+function act(a){
+ if(!ON)return run(a,cur);
+ if(a.t!=="acc"&&a.t!=="dec"&&me!==cur){$("msg").textContent="It is not your turn.";return}
+ a.m=mode;if(HOST)run(a,me);else R.presence({a:{k:++ak,d:a}}).catch(()=>{})}
+function draw(){
+ let s="";
+ H.forEach((h,x)=>{s+=`<polygon points="${h.c.map(k=>V[k].x.toFixed(1)+","+V[k].y.toFixed(1)).join(" ")}" fill="${COL[h.t]}" stroke="#12303a" stroke-opacity=".4" stroke-width="1.5"/>`;
+  s+=`<text x="${h.cx}" y="${h.cy-20}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" stroke="#12303a" stroke-width="3" paint-order="stroke">${h.t==="desert"?"Desert":N[h.t]}</text>`;
+  if(h.n)s+=`<circle cx="${h.cx}" cy="${h.cy+2}" r="13" fill="#f6f1e1"/><text x="${h.cx}" y="${h.cy+7}" text-anchor="middle" font-size="15" font-weight="${h.n==6||h.n==8?700:400}" fill="${h.n==6||h.n==8?"#b00020":"#222"}">${h.n}</text>`;
+  if(x===rb)s+=`<ellipse cx="${h.cx+16}" cy="${h.cy+20}" rx="7" ry="9" fill="#111" stroke="#fff" stroke-width="1.5"/>`;
+  if(pend)s+=`<polygon class="hx" data-h="${x}" points="${h.c.map(k=>V[k].x+","+V[k].y).join(" ")}"/>`});
+ for(const k in E){const[a,b]=E[k],o=Rd[k],l=`x1="${V[a].x}" y1="${V[a].y}" x2="${V[b].x}" y2="${V[b].y}"`;
+  if(o!==undefined)s+=`<line ${l} stroke="#12303a" stroke-width="7" stroke-linecap="round"/><line ${l} stroke="${P[o].c}" stroke-width="3.5" stroke-linecap="round"/>`;
+  else if((setup&&sp==="road"&&E[k].includes(lt))||(!setup&&mode==="road"&&canRoad(cur,k)))s+=`<line class="e" data-e="${k}" ${l} style="stroke:rgba(255,255,255,.55)"/>`}
+ for(const k in V){const v=V[k],b=B[k];
+  if(b){const c=P[b.o].c;s+=b.l===1?`<polygon points="${v.x-7},${v.y+6} ${v.x+7},${v.y+6} ${v.x+7},${v.y-2} ${v.x},${v.y-9} ${v.x-7},${v.y-2}" fill="${c}" stroke="#12303a" stroke-width="2"/>`:`<rect x="${v.x-10}" y="${v.y-9}" width="20" height="16" fill="${c}" stroke="#12303a" stroke-width="2"/><polygon points="${v.x-10},${v.y-9} ${v.x},${v.y-17} ${v.x+10},${v.y-9}" fill="${c}" stroke="#12303a" stroke-width="2"/>`}
+  else if(((setup&&sp==="town")||(!setup&&mode==="town"))&&free(k)&&(setup||conn(cur,k)))s+=`<circle cx="${v.x}" cy="${v.y}" r="5" fill="#fff" fill-opacity=".85" stroke="#12303a"/>`;
+  s+=`<circle class="v" data-v="${k}" cx="${v.x}" cy="${v.y}" r="13"/>`}
+ const bd=$("board");bd.innerHTML=s;
+ const cl=(y,i)=>act({t:"click",y,i});
+ bd.querySelectorAll("[data-v]").forEach(e=>e.onclick=()=>cl("v",e.dataset.v));
+ bd.querySelectorAll("[data-e]").forEach(e=>e.onclick=()=>cl("e",e.dataset.e));
+ bd.querySelectorAll("[data-h]").forEach(e=>e.onclick=()=>cl("h",e.dataset.h));
+ const vw=ON&&me>=0?me:cur;
+ $("res").innerHTML=K.map(k=>`<div style="border-bottom:4px solid ${COL[k]}"><b>${P[vw].r[k]}</b>${N[k]}</div>`).join("");
+ $("who").textContent=ON?(me>=0?"You are "+P[me].n+". "+(me===cur?"It is your turn.":"It is "+P[cur].n+"'s turn."):"You are watching."):"Cards for "+P[cur].n+". Pass the device when you end your turn.";
+ $("sc").innerHTML=P.map((p,i)=>`<span style="border-color:${i===cur?p.c:"var(--line)"};${i===cur?"font-weight:700":""}"><b style="color:${p.c};text-shadow:0 0 1px #000,0 0 1px #000">&#9679;</b> ${esc(p.n)}: ${vp(i)} pts, ${tot(p)} cards</span>`).join("");
+ if(rolled&&!setup)showDice(D[0],D[1],true);else if(!rolling)$("dice").hidden=true;
+ $("trrow").hidden=!ON;$("isl").hidden=ON&&!HOST;
+ const tk=vw+"|"+P.map(p=>p.n).join(",");if($("tp").dataset.k!==tk){$("tp").dataset.k=tk;$("tp").innerHTML=P.map((p,i)=>i===vw?"":`<option value="${i}">${esc(p.n)}</option>`).join("")}
+ $("tr").hidden=!tr;if(tr){$("trt").textContent=P[tr.o].n+", "+P[tr.f].n+" offers "+tr.gq+" "+N[tr.gk].toLowerCase()+" for "+tr.rq+" "+N[tr.rk].toLowerCase()+".";$("acc").hidden=$("dec").hidden=tr.o!==me}
+ document.querySelectorAll("[data-m]").forEach(b=>b.classList.toggle("on",b.dataset.m===mode));
+ if(ON&&HOST&&R)R.presence({s:snap()}).catch(()=>{})}
+const showDice=(a,b,fin)=>{const d=$("dice");d.hidden=false;d.className=fin?"":"roll";d.innerHTML=`<i>${a}</i><i>${b}</i>`+(fin?`<b>= ${a+b}</b>`:"")};
+$("roll").onclick=()=>{if(rolling)return;
+ if(ON||setup||won!==null||rolled)return act({t:"roll"});
+ rolling=true;let n=0;const t=setInterval(()=>{showDice(r6(),r6(),false);if(++n>=6){clearInterval(t);rolling=false;act({t:"roll"})}},110)};
+$("end").onclick=()=>{if(!rolling)act({t:"end"})};
+document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=mode===b.dataset.m?null:b.dataset.m;if(mode)say(mode==="road"?"Tap a glowing edge.":"Tap a corner.");draw()});
+const opts=()=>K.map(k=>`<option value="${k}">${N[k]}</option>`).join("");
+[$("g"),$("t"),$("gk"),$("rk")].forEach((s,j)=>{s.innerHTML=opts();s.selectedIndex=j%2});
+["gq","rq"].forEach(id=>$(id).innerHTML=[1,2,3,4].map(x=>`<option>${x}</option>`).join(""));
+$("bank").onclick=()=>act({t:"bank",g:$("g").value,r:$("t").value});
+$("offer").onclick=()=>act({t:"offer",o:+$("tp").value,gk:$("gk").value,rk:$("rk").value,gq:+$("gq").value,rq:+$("rq").value});
+$("acc").onclick=()=>act({t:"acc"});$("dec").onclick=()=>act({t:"dec"});
+$("isl").onclick=()=>{if(rolling||(ON&&!HOST))return;P.forEach(p=>p.r=zero());$("dice").hidden=true;initGame()};
+$("new").onclick=()=>{if(ON)leave();else show("start")};
+// ----- online lobby -----
+const named=()=>R.peers().filter(p=>p.kind==="viewer"&&p.presence.name).sort((a,b)=>(a.presence.ts-b.presence.ts)||(a.peer<b.peer?-1:1));
+function lobbyUI(){if(!R||started)return;const ps=named();
+ $("lp").innerHTML=ps.map((p,i)=>`<li><b style="color:${CL[i]?CL[i].c:"#888"};text-shadow:0 0 1px #000">&#9679;</b> ${esc(p.presence.name)}${p.isMe?" (you)":""}${p.presence.h?" - host":""}</li>`).join("");
+ $("ls").hidden=!HOST;$("ls").disabled=ps.length<2;$("le").textContent=HOST?(ps.length<2?"Waiting for at least one more player.":"Ready. Press Start game."):"Waiting for the host to start."}
+function onP(){
+ const ps=R.peers(),hp=ps.find(p=>p.presence.h&&p.presence.s);
+ if(!HOST){if(hp&&hp.presence.s.v>lastV){lastV=hp.presence.s.v;load(hp.presence.s)}else if(!started)lobbyUI()}
+ else{if(!started)lobbyUI();else ps.forEach(p=>{const a=p.presence.a;if(!p.isMe&&a&&(seen[p.peer]||0)<a.k){seen[p.peer]=a.k;const i=P.findIndex(x=>x.p===p.peer);if(i>=0)run(a.d,i)}})}}
+async function enter(c,host,name){const oe=$("oe");oe.textContent="";
+ try{R=await room.join("arabic-"+c)}catch(e){oe.textContent="Could not open the lobby. Online play may not work for your account.";return}
+ ON=true;HOST=host;code=c;started=false;lastV=-1;seen={};R.onPeers(onP);
+ try{if(host)await R.presence({name,ts:Date.now(),h:1});
+  else{await new Promise(r=>setTimeout(r,2500));const ps=R.peers(),hp=ps.find(p=>p.presence.h&&!p.isMe);
+   if(!hp)return fail("No lobby found with that code.");
+   if(hp.presence.s)return fail("That game already started.");
+   if(named().length>=4)return fail("That lobby is full.");
+   await R.presence({name,ts:Date.now()})}}catch(e){return fail("Could not join. Try again.")}
+ $("lc").textContent=c;show("lobby");lobbyUI()}
+async function fail(m){await leave(true);$("oe").textContent=m}
+async function leave(quiet){try{if(R)await R.leave()}catch(e){}R=null;ON=false;HOST=false;started=false;me=-1;show("start");if(!quiet)$("oe").textContent=""}
+$("ll").onclick=()=>leave();
+$("mk").onclick=()=>{const n=$("nm").value.trim();if(!n){$("oe").textContent="Type your name first.";return}enter(Math.random().toString(36).slice(2,7),true,n)};
+$("jn").onclick=()=>{const n=$("nm").value.trim(),c=$("jc").value.toLowerCase().replace(/[^a-z0-9]/g,"");
+ if(!n){$("oe").textContent="Type your name first.";return}if(c.length<3){$("oe").textContent="Type the join code.";return}enter(c,false,n)};
+$("ls").onclick=()=>{const ps=named().slice(0,4);if(ps.length<2)return;
+ P=sh(ps.map((p,i)=>({n:p.presence.name,c:CL[i].c,p:p.peer,r:zero()})));started=true;show("game");initGame()};
+function shimRoom(){return{join(name){return new Promise((res,rej)=>{
+ const id=Math.random().toString(36).slice(2,12),url="room="+encodeURIComponent(name)+"&id="+id;
+ let peers=[],subs=[],done=false,opened=false,mine={};
+ const post=p=>fetch("/pr?"+url,{method:"POST",body:JSON.stringify(p)}).then(r=>{if(!r.ok)throw new Error("x")});
+ const es=new EventSource("/ev?"+url);
+ const R={peers:()=>peers,onPeers:f=>{subs.push(f);return()=>{subs=subs.filter(x=>x!==f)}},
+  presence:p=>{for(const k in p){if(p[k]===null)delete mine[k];else mine[k]=p[k]}return post(p)},leave:async()=>{es.close()}};
+ es.onopen=()=>{if(opened&&Object.keys(mine).length)post(mine).catch(()=>{});opened=true};
+ es.onmessage=e=>{peers=JSON.parse(e.data).map(p=>({peer:p.peer,presence:p.presence,isMe:p.peer===id,sameTab:p.peer===id,kind:"viewer"}));if(!done){done=true;res(R)}subs.forEach(f=>f())};
+ es.onerror=()=>{if(!done){done=true;es.close();rej(new Error("x"))}};
+})}}}
+room=shimRoom();
+</script></body></html>
